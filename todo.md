@@ -12,3 +12,4 @@
 - [x] Create and run Vitest coverage for marketplace procedures and key data transformations.
 - [x] Ensure public marketplace queries return null rather than undefined when no record exists.
 - [ ] Verify responsive rendering, review runtime output, checkpoint the completed website, and deliver the project version.
+- [x] Rename the public marketplace identity and supporting copy from RAMA to Crafted Men across all customer-facing pages.

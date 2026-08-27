@@ -22,7 +22,7 @@ function context(): TrpcContext {
       id: 21,
       openId: "marketplace-user",
       email: "seller@example.com",
-      name: "RAMA Seller",
+      name: "Crafted Men Seller",
       loginMethod: "manus",
       role: "user",
       createdAt: new Date(),
@@ -45,12 +45,12 @@ describe("marketplace procedures", () => {
   });
 
   it("creates a buyer profile against the authenticated user", async () => {
-    vi.mocked(db.upsertMarketplaceProfile).mockResolvedValue({ id: 4, userId: 21, accountType: "buyer", displayName: "RAMA Buyer" } as never);
+    vi.mocked(db.upsertMarketplaceProfile).mockResolvedValue({ id: 4, userId: 21, accountType: "buyer", displayName: "Crafted Men Buyer" } as never);
     const caller = appRouter.createCaller(context());
 
-    await caller.marketplace.onboard({ accountType: "buyer", displayName: "RAMA Buyer", city: "Lagos" });
+    await caller.marketplace.onboard({ accountType: "buyer", displayName: "Crafted Men Buyer", city: "Lagos" });
 
-    expect(db.upsertMarketplaceProfile).toHaveBeenCalledWith({ userId: 21, accountType: "buyer", displayName: "RAMA Buyer", city: "Lagos" });
+    expect(db.upsertMarketplaceProfile).toHaveBeenCalledWith({ userId: 21, accountType: "buyer", displayName: "Crafted Men Buyer", city: "Lagos" });
   });
 
   it("allows a seller profile to publish a validated listing", async () => {

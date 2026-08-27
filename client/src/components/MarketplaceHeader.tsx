@@ -21,9 +21,9 @@ export function MarketplaceHeader() {
   return (
     <>
       <header className="relative z-30 mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 md:px-10 lg:px-14">
-        <button onClick={() => nav("/")} className="flex items-center gap-2.5 text-left" aria-label="RAMA Marketplace home">
-          <span className="grid size-9 place-items-center rounded-full bg-[#193d2b] text-sm font-bold text-[#f8f7f1]">R</span>
-          <span className="text-lg font-semibold tracking-[-0.07em] text-[#193d2b]">RAMA</span>
+        <button onClick={() => nav("/")} className="flex items-center gap-2.5 text-left" aria-label="Crafted Men home">
+          <span className="grid size-9 place-items-center rounded-full bg-[#193d2b] text-sm font-bold text-[#f8f7f1]">C</span>
+          <span className="text-lg font-semibold tracking-[-0.07em] text-[#193d2b]">CRAFTED MEN</span>
           <span className="hidden border-l border-[#193d2b]/20 pl-2 text-[9px] font-medium tracking-[0.16em] text-[#193d2b]/70 sm:inline">MARKETPLACE</span>
         </button>
         <nav className="hidden items-center gap-7 text-sm font-medium text-[#31513f] lg:flex">

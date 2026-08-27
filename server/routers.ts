@@ -62,12 +62,12 @@ export const appRouter = router({
       const response = await invokeLLM({
         model: "gpt-5-mini",
         messages: [
-          { role: "system", content: "You are RAMA Guide, a concise, warm marketplace assistant. Help people navigate product and service categories, suggest simple search terms, explain how to buy or sell safely on RAMA, and point sellers to create an account. Do not invent listings, availability, prices, policies, payment capability, or contact details. Use short, useful answers in plain language." },
+          { role: "system", content: "You are Crafted Men Guide, a concise, warm marketplace assistant. Help people navigate product and service categories, suggest simple search terms, explain how to buy or sell safely on Crafted Men, and point sellers to create an account. Do not invent listings, availability, prices, policies, payment capability, or contact details. Use short, useful answers in plain language." },
           { role: "user", content: input.message },
         ],
       });
       const content = response.choices[0]?.message?.content;
-      return { message: typeof content === "string" ? content : "I can help you explore RAMA or prepare to sell. What are you looking for?" };
+      return { message: typeof content === "string" ? content : "I can help you explore Crafted Men or prepare to sell. What are you looking for?" };
     }),
   }),
 });

@@ -68,16 +68,16 @@ export default function Home() {
       </div>
 
       <header className="relative z-30 mx-auto flex max-w-[1440px] items-center justify-between px-5 py-5 md:px-10 lg:px-14">
-        <button onClick={() => setLocation("/")} className="flex items-center gap-2.5 text-left" aria-label="RAMA Marketplace home">
-          <span className="grid size-9 place-items-center rounded-full bg-[#193d2b] text-sm font-bold text-[#f8f7f1]">R</span>
-          <span className="text-lg font-semibold tracking-[-0.07em] text-[#193d2b]">RAMA</span>
+        <button onClick={() => setLocation("/")} className="flex items-center gap-2.5 text-left" aria-label="Crafted Men home">
+          <span className="grid size-9 place-items-center rounded-full bg-[#193d2b] text-sm font-bold text-[#f8f7f1]">C</span>
+          <span className="text-lg font-semibold tracking-[-0.07em] text-[#193d2b]">CRAFTED MEN</span>
           <span className="hidden border-l border-[#193d2b]/20 pl-2 text-[9px] font-medium tracking-[0.16em] text-[#193d2b]/70 sm:inline">MARKETPLACE</span>
         </button>
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-[#31513f] lg:flex">
           <button onClick={() => document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" })} className="transition-colors hover:text-[#b85a3f]">Browse</button>
           <button onClick={() => setLocation("/listings") } className="transition-colors hover:text-[#b85a3f]">Find listings</button>
-          <button onClick={() => document.getElementById("premium")?.scrollIntoView({ behavior: "smooth" })} className="transition-colors hover:text-[#b85a3f]">RAMA Plus</button>
+          <button onClick={() => document.getElementById("premium")?.scrollIntoView({ behavior: "smooth" })} className="transition-colors hover:text-[#b85a3f]">Crafted+</button>
           <button onClick={() => storeJourney("seller")} className="transition-colors hover:text-[#b85a3f]">For sellers</button>
         </nav>
 
@@ -94,7 +94,7 @@ export default function Home() {
             {[
               ["Browse categories", () => document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" })],
               ["Find listings", () => setLocation("/listings")],
-              ["RAMA Plus", () => document.getElementById("premium")?.scrollIntoView({ behavior: "smooth" })],
+              ["Crafted+", () => document.getElementById("premium")?.scrollIntoView({ behavior: "smooth" })],
               ["Start selling", () => storeJourney("seller")],
             ].map(([label, action]) => (
               <button key={label as string} onClick={() => { setMenuOpen(false); (action as () => void)(); }} className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-semibold text-[#193d2b] hover:bg-[#edf0e7]">
@@ -116,13 +116,13 @@ export default function Home() {
                 Find what moves <em className="font-normal text-[#b85a3f]">your world.</em>
               </h1>
               <p className="mt-6 max-w-[510px] text-base leading-7 text-[#355540] sm:text-lg">
-                RAMA brings together remarkable products, places, and people—so whatever you are looking for, your next connection starts here.
+                Crafted Men brings together remarkable products, places, and people—so whatever you are looking for, your next connection starts here.
               </p>
 
               <form onSubmit={submitSearch} className="mt-9 max-w-[620px] rounded-[1.2rem] bg-[#fcfbf7] p-2 shadow-[0_22px_60px_-30px_rgba(25,61,43,0.45)] sm:rounded-full sm:p-2.5">
                 <div className="flex items-center gap-2">
                   <Search className="ml-2 size-5 shrink-0 text-[#779080]" />
-                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for anything—cars, homes, services..." className="h-12 min-w-0 flex-1 bg-transparent px-1 text-sm text-[#193d2b] outline-none placeholder:text-[#7e8f82] sm:text-base" aria-label="Search RAMA Marketplace" />
+                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for anything—cars, homes, services..." className="h-12 min-w-0 flex-1 bg-transparent px-1 text-sm text-[#193d2b] outline-none placeholder:text-[#7e8f82] sm:text-base" aria-label="Search Crafted Men" />
                   <button type="submit" className="hidden items-center gap-2 rounded-full bg-[#193d2b] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#285941] active:scale-[0.97] sm:inline-flex">Search <ArrowRight className="size-4" /></button>
                   <button type="submit" className="grid size-11 shrink-0 place-items-center rounded-full bg-[#193d2b] text-white sm:hidden" aria-label="Submit search"><ArrowRight className="size-4" /></button>
                 </div>
@@ -186,20 +186,20 @@ export default function Home() {
           <div className="relative overflow-hidden rounded-[2rem] border border-[#b85a3f]/15 bg-[#f4ebe1] p-7 sm:p-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-center lg:gap-12 lg:p-14">
             <Gem className="absolute -right-8 -top-8 size-44 text-[#d87b5e]/10" strokeWidth={1} />
             <div className="relative max-w-[680px]">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#fff8f2] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#b85a3f]"><Gem className="size-3.5" /> RAMA Plus</div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#fff8f2] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#b85a3f]"><Gem className="size-3.5" /> Crafted+</div>
               <h2 className="mt-5 font-['Playfair_Display'] text-4xl tracking-[-0.045em] text-[#603326] sm:text-5xl">A little more for the way you move.</h2>
               <p className="mt-4 max-w-[620px] text-base leading-7 text-[#795443]">Premium membership brings elevated discovery, tailored marketplace support, and a more visible presence when you are ready to be found.</p>
               <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-[#704738]"><span className="flex items-center gap-2"><ShieldCheck className="size-4 text-[#b85a3f]" />Enhanced visibility</span><span className="flex items-center gap-2"><Sparkles className="size-4 text-[#b85a3f]" />Tailored assistance</span><span className="flex items-center gap-2"><Heart className="size-4 text-[#b85a3f]" />Saved discovery</span></div>
             </div>
-            <button onClick={() => storeJourney("buyer")} className="relative mt-8 inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#b85a3f] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#a84b34] active:scale-[0.97] lg:mt-0">Explore RAMA Plus <ArrowRight className="size-4" /></button>
+            <button onClick={() => storeJourney("buyer")} className="relative mt-8 inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#b85a3f] px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#a84b34] active:scale-[0.97] lg:mt-0">Explore Crafted+ <ArrowRight className="size-4" /></button>
           </div>
         </section>
       </main>
 
       <footer className="border-t border-[#193d2b]/10 px-5 py-8 md:px-10 lg:px-14">
         <div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-5 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-[#193d2b] text-[10px] font-bold text-[#f8f7f0]">R</span><span className="text-xs font-semibold tracking-[0.12em] text-[#193d2b]">RAMA MARKETPLACE</span></div>
-          <div className="flex flex-wrap items-center gap-5 text-xs text-[#587060]"><button onClick={() => setLocation("/listings")} className="hover:text-[#b85a3f]">Explore listings</button><button onClick={() => storeJourney("seller")} className="hover:text-[#b85a3f]">Sell on RAMA</button><span className="flex items-center gap-1"><MapPin className="size-3.5" /> Made for wherever you are</span></div>
+          <div className="flex items-center gap-3"><span className="grid size-7 place-items-center rounded-full bg-[#193d2b] text-[10px] font-bold text-[#f8f7f0]">C</span><span className="text-xs font-semibold tracking-[0.12em] text-[#193d2b]">CRAFTED MEN</span></div>
+          <div className="flex flex-wrap items-center gap-5 text-xs text-[#587060]"><button onClick={() => setLocation("/listings")} className="hover:text-[#b85a3f]">Explore listings</button><button onClick={() => storeJourney("seller")} className="hover:text-[#b85a3f]">Sell on Crafted Men</button><span className="flex items-center gap-1"><MapPin className="size-3.5" /> Made for wherever you are</span></div>
         </div>
       </footer>
     </div>
