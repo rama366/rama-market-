@@ -8,4 +8,11 @@ describe("Crafted Men branding", () => {
 
     expect(document).toContain("<title>Crafted Men</title>");
   });
+
+  it("presents Crafted+ without collecting payment details", () => {
+    const accountPage = readFileSync(resolve(process.cwd(), "client/src/pages/Account.tsx"), "utf8");
+
+    expect(accountPage).toContain("Join the Crafted+ priority list");
+    expect(accountPage).toContain("No payment details are required or collected.");
+  });
 });
