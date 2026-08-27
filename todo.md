@@ -13,3 +13,14 @@
 - [x] Ensure public marketplace queries return null rather than undefined when no record exists.
 - [x] Verify responsive rendering, review runtime output, checkpoint the completed website, and deliver the project version.
 - [x] Rename the public marketplace identity and supporting copy from RAMA to Crafted Men across all customer-facing pages.
+- [x] Add location-aware seller and listing coordinates with map-based nearby discovery and distance filters.
+- [x] Add buyer wishlist storage and saved-listing controls across marketplace discovery and listing detail views.
+- [x] Add secure seller listing image uploads backed by project file storage.
+- [x] Add automated coverage and responsive validation for maps, wishlists, and image uploads.
+- [x] Clarify that nearby discovery uses each seller's geocoded marketplace city as its location signal.
+- [x] Validate enhanced nearby discovery and marketplace account journeys at mobile size.
+- [x] Confirm map-open and image-upload workflow behavior through focused implementation checks.
+- [x] Verify the nearby map in an explicitly opened state with seller markers.
+- [x] Verify seller photo upload renders selected images in the listing form and listing gallery.
+- [x] Add deterministic component-level coverage for nearby marker projection and uploaded listing gallery payloads without seeding marketplace records.
+- [x] Add a resilient nearby-map fallback when the managed map provider cannot load in a visitor environment.

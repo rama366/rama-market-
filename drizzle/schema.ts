@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -20,6 +20,8 @@ export const marketplaceProfiles = mysqlTable("marketplaceProfiles", {
   businessName: varchar("businessName", { length: 160 }),
   bio: text("bio"),
   city: varchar("city", { length: 120 }),
+  latitudeE6: int("latitudeE6"),
+  longitudeE6: int("longitudeE6"),
   phone: varchar("phone", { length: 40 }),
   membership: mysqlEnum("membership", ["free", "plus"]).default("free").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -50,11 +52,28 @@ export const listingEnquiries = mysqlTable("listingEnquiries", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const listingImages = mysqlTable("listingImages", {
+  id: int("id").autoincrement().primaryKey(),
+  listingId: int("listingId").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const premiumInterest = mysqlTable("premiumInterest", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().unique(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+export const wishlists = mysqlTable("wishlists", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  listingId: int("listingId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("wishlists_user_listing_unique").on(table.userId, table.listingId),
+]);
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;

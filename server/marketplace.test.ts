@@ -1,20 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getFallbackMarkerPosition } from "../client/src/lib/nearby";
 
 vi.mock("./db", () => ({
+  addWishlistItem: vi.fn(),
   createListing: vi.fn(),
   createListingEnquiry: vi.fn(),
   getMarketplaceProfile: vi.fn(),
   getPublishedListing: vi.fn(),
   getUserByOpenId: vi.fn(),
+  getWishlistItems: vi.fn(),
   registerPremiumInterest: vi.fn(),
+  removeWishlistItem: vi.fn(),
+  searchNearbyListings: vi.fn(),
   searchPublishedListings: vi.fn(),
   upsertMarketplaceProfile: vi.fn(),
   upsertUser: vi.fn(),
 }));
 
+vi.mock("./storage", () => ({ storagePut: vi.fn() }));
+
 import * as db from "./db";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+import { storagePut } from "./storage";
 
 function context(): TrpcContext {
   return {
@@ -68,5 +76,55 @@ describe("marketplace procedures", () => {
 
     await expect(caller.marketplace.createListing({ title: "Photography session", description: "A portrait session with careful editing and a relaxed city location of your choice.", category: "services", currency: "USD" })).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(db.createListing).not.toHaveBeenCalled();
+  });
+
+  it("forwards nearby filters to the coordinate-aware listing search", async () => {
+    vi.mocked(db.searchNearbyListings).mockResolvedValue([] as never);
+    const caller = appRouter.createCaller(context());
+    const input = { latitudeE6: 6_524_400, longitudeE6: 3_379_200, radiusKm: 25, category: "services" as const };
+
+    await expect(caller.marketplace.nearbyListings(input)).resolves.toEqual([]);
+    expect(db.searchNearbyListings).toHaveBeenCalledWith(input);
+  });
+
+  it("lets buyer profiles save an available listing to their wishlist", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "buyer" } as never);
+    vi.mocked(db.getPublishedListing).mockResolvedValue({ listing: { id: 31 }, seller: { userId: 88 } } as never);
+    const caller = appRouter.createCaller(context());
+
+    await expect(caller.marketplace.saveWishlist({ listingId: 31 })).resolves.toEqual({ success: true });
+    expect(db.addWishlistItem).toHaveBeenCalledWith(21, 31);
+  });
+
+  it("rejects listing image URLs that do not come from protected project storage", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "seller" } as never);
+    const caller = appRouter.createCaller(context());
+
+    await expect(caller.marketplace.createListing({ title: "Minimal leather messenger", description: "A carefully made leather messenger bag with a durable lined interior and adjustable strap.", category: "clothing", currency: "USD", imageUrls: ["https://untrusted.example/image.jpg"] })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(db.createListing).not.toHaveBeenCalled();
+  });
+
+  it("stores a valid seller image through protected project storage", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "seller" } as never);
+    vi.mocked(storagePut).mockResolvedValue({ key: "listing-images/21/cover.png", url: "/manus-storage/listing-images/21/cover.png" });
+    const caller = appRouter.createCaller(context());
+
+    await expect(caller.marketplace.uploadListingImage({ dataUrl: "data:image/png;base64,iVBORw0KGgo=" })).resolves.toEqual({ key: "listing-images/21/cover.png", url: "/manus-storage/listing-images/21/cover.png" });
+    expect(storagePut).toHaveBeenCalledWith(expect.stringMatching(/^listing-images\/21\//), expect.any(Buffer), "image/png");
+  });
+
+  it("preserves protected image gallery URLs when a seller publishes a listing", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "seller" } as never);
+    vi.mocked(db.createListing).mockResolvedValue(43 as never);
+    const caller = appRouter.createCaller(context());
+    const imageUrls = ["/manus-storage/listing-images/21/front.jpg", "/manus-storage/listing-images/21/detail.jpg"];
+
+    await expect(caller.marketplace.createListing({ title: "Hand-finished travel case", description: "A hand-finished leather travel case with an organized interior and a durable clasp for everyday use.", category: "clothing", currency: "USD", imageUrls })).resolves.toEqual({ id: 43 });
+    expect(db.createListing).toHaveBeenCalledWith(expect.objectContaining({ imageUrls }));
+  });
+
+  it("keeps fallback nearby-map seller marker positions within visible boundaries", () => {
+    expect(getFallbackMarkerPosition({ lat: 40.7128, lng: -74.006 }, 40_712_800, -74_006_000)).toEqual({ left: "50%", top: "50%" });
+    expect(getFallbackMarkerPosition({ lat: 40.7128, lng: -74.006 }, 50_000_000, -90_000_000)).toEqual({ left: "8%", top: "10%" });
   });
 });
