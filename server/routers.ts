@@ -18,6 +18,16 @@ const profileInput = z.object({
   city: z.string().trim().max(120).optional(),
   phone: z.string().trim().max(40).optional(),
 });
+const sellerProfileUpdateInput = profileInput.omit({ accountType: true });
+const listingInput = z.object({
+  title: z.string().trim().min(3).max(180),
+  description: z.string().trim().min(20).max(5000),
+  category: categorySchema,
+  priceCents: z.number().int().positive().max(999999999).optional(),
+  currency: z.string().trim().length(3).default("USD"),
+  location: z.string().trim().max(160).optional(),
+  imageUrls: z.array(z.string().max(2000).refine((url) => url.startsWith("/manus-storage/"), "Listing images must use project storage.")).max(6).optional(),
+});
 const nearbyInput = z.object({
   latitudeE6: z.number().int().min(-90_000_000).max(90_000_000),
   longitudeE6: z.number().int().min(-180_000_000).max(180_000_000),
@@ -56,6 +66,12 @@ async function buyerProfile(userId: number) {
   return profile;
 }
 
+async function sellerProfile(userId: number) {
+  const profile = await db.getMarketplaceProfile(userId);
+  if (!profile || profile.accountType !== "seller") throw new TRPCError({ code: "FORBIDDEN", message: "Create a seller profile to manage marketplace listings." });
+  return profile;
+}
+
 export const appRouter = router({
   system: systemRouter,
   auth: router({
@@ -71,26 +87,43 @@ export const appRouter = router({
       const coordinates = input.accountType === "seller" ? await coordinatesForCity(input.city) : {};
       return db.upsertMarketplaceProfile({ userId: ctx.user.id, ...input, ...coordinates });
     }),
+    updateSellerProfile: protectedProcedure.input(sellerProfileUpdateInput).mutation(async ({ ctx, input }) => {
+      const profile = await sellerProfile(ctx.user.id);
+      const coordinates = input.city !== profile.city
+        ? await coordinatesForCity(input.city)
+        : { latitudeE6: profile.latitudeE6 ?? undefined, longitudeE6: profile.longitudeE6 ?? undefined };
+      return db.upsertMarketplaceProfile({ userId: ctx.user.id, accountType: "seller", ...input, ...coordinates });
+    }),
     listings: publicProcedure.input(z.object({ query: z.string().trim().max(120).optional(), category: categorySchema.optional() }).optional()).query(({ input }) => db.searchPublishedListings(input ?? {})),
     nearbyListings: publicProcedure.input(nearbyInput).query(({ input }) => db.searchNearbyListings(input)),
     listing: publicProcedure.input(z.object({ id: z.number().int().positive() })).query(({ input }) => db.getPublishedListing(input.id)),
-    createListing: protectedProcedure.input(z.object({
-      title: z.string().trim().min(3).max(180),
-      description: z.string().trim().min(20).max(5000),
-      category: categorySchema,
-      priceCents: z.number().int().positive().max(999999999).optional(),
-      currency: z.string().trim().length(3).default("USD"),
-      location: z.string().trim().max(160).optional(),
-      imageUrls: z.array(z.string().max(2000).refine((url) => url.startsWith("/manus-storage/"), "Listing images must use project storage.")).max(6).optional(),
-    })).mutation(async ({ ctx, input }) => {
-      const profile = await db.getMarketplaceProfile(ctx.user.id);
-      if (!profile || profile.accountType !== "seller") throw new TRPCError({ code: "FORBIDDEN", message: "Create a seller profile before publishing a listing." });
+    createListing: protectedProcedure.input(listingInput).mutation(async ({ ctx, input }) => {
+      const profile = await sellerProfile(ctx.user.id);
       const id = await db.createListing({ sellerProfileId: profile.id, ...input });
       return { id };
     }),
+    sellerListings: protectedProcedure.query(async ({ ctx }) => {
+      await sellerProfile(ctx.user.id);
+      return db.getSellerListings(ctx.user.id);
+    }),
+    updateListing: protectedProcedure.input(listingInput.extend({ listingId: z.number().int().positive(), status: z.enum(["draft", "published", "archived"]) })).mutation(async ({ ctx, input }) => {
+      const profile = await sellerProfile(ctx.user.id);
+      const current = await db.getSellerListing(ctx.user.id, input.listingId);
+      if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "This listing no longer belongs to your seller profile." });
+      await db.updateSellerListing({ sellerProfileId: profile.id, ...input });
+      await db.createWishlistChangeNotifications({ listingId: input.listingId, listingTitle: current.listing.title, previousPriceCents: current.listing.priceCents, nextPriceCents: input.priceCents ?? null, previousStatus: current.listing.status, nextStatus: input.status });
+      return { success: true };
+    }),
+    deleteListing: protectedProcedure.input(z.object({ listingId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const profile = await sellerProfile(ctx.user.id);
+      const current = await db.getSellerListing(ctx.user.id, input.listingId);
+      if (!current) throw new TRPCError({ code: "NOT_FOUND", message: "This listing no longer belongs to your seller profile." });
+      await db.archiveSellerListing(profile.id, input.listingId);
+      await db.createWishlistChangeNotifications({ listingId: input.listingId, listingTitle: current.listing.title, previousPriceCents: current.listing.priceCents, nextPriceCents: current.listing.priceCents, previousStatus: current.listing.status, nextStatus: "archived" });
+      return { success: true };
+    }),
     uploadListingImage: protectedProcedure.input(z.object({ dataUrl: z.string().min(32).max(12_000_000) })).mutation(async ({ ctx, input }) => {
-      const profile = await db.getMarketplaceProfile(ctx.user.id);
-      if (!profile || profile.accountType !== "seller") throw new TRPCError({ code: "FORBIDDEN", message: "Create a seller profile before uploading listing images." });
+      await sellerProfile(ctx.user.id);
       const { image, mimeType, extension } = parseImageDataUrl(input.dataUrl);
       return storagePut(`listing-images/${ctx.user.id}/${crypto.randomUUID()}.${extension}`, image, mimeType);
     }),
@@ -115,6 +148,15 @@ export const appRouter = router({
     removeWishlist: protectedProcedure.input(z.object({ listingId: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       await buyerProfile(ctx.user.id);
       await db.removeWishlistItem(ctx.user.id, input.listingId);
+      return { success: true };
+    }),
+    notifications: protectedProcedure.query(async ({ ctx }) => {
+      await buyerProfile(ctx.user.id);
+      return db.getBuyerNotifications(ctx.user.id);
+    }),
+    markNotificationsRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await buyerProfile(ctx.user.id);
+      await db.markBuyerNotificationsRead(ctx.user.id);
       return { success: true };
     }),
     premiumInterest: protectedProcedure.mutation(async ({ ctx }) => {

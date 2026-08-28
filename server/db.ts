@@ -1,6 +1,6 @@
 import { and, desc, eq, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, listingImages, listings, listingEnquiries, marketplaceProfiles, premiumInterest, users, wishlists } from "../drizzle/schema";
+import { buyerNotifications, InsertUser, listingImages, listings, listingEnquiries, marketplaceProfiles, premiumInterest, users, wishlists } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -158,6 +158,80 @@ export async function createListing(input: {
   return listingId;
 }
 
+export async function getSellerListings(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({ listing: listings }).from(listings)
+    .innerJoin(marketplaceProfiles, eq(listings.sellerProfileId, marketplaceProfiles.id))
+    .where(eq(marketplaceProfiles.userId, userId))
+    .orderBy(desc(listings.updatedAt));
+  return Promise.all(rows.map(async (row) => ({
+    ...row,
+    images: await db.select().from(listingImages).where(eq(listingImages.listingId, row.listing.id)).orderBy(listingImages.sortOrder),
+  })));
+}
+
+export async function getSellerListing(userId: number, listingId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select({ listing: listings }).from(listings)
+    .innerJoin(marketplaceProfiles, eq(listings.sellerProfileId, marketplaceProfiles.id))
+    .where(and(eq(marketplaceProfiles.userId, userId), eq(listings.id, listingId))).limit(1);
+  const row = result[0];
+  if (!row) return null;
+  return { ...row, images: await db.select().from(listingImages).where(eq(listingImages.listingId, listingId)).orderBy(listingImages.sortOrder) };
+}
+
+export async function updateSellerListing(input: {
+  listingId: number; sellerProfileId: number; title: string; description: string; category: "clothing" | "cars" | "homes" | "electronics" | "services";
+  priceCents?: number; currency: string; location?: string; imageUrls?: string[]; status: "draft" | "published" | "archived";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Marketplace service is unavailable.");
+  await db.update(listings).set({
+    title: input.title,
+    description: input.description,
+    category: input.category,
+    priceCents: input.priceCents ?? null,
+    currency: input.currency,
+    location: input.location || null,
+    imageUrl: input.imageUrls?.[0] || null,
+    status: input.status,
+    updatedAt: new Date(),
+  }).where(and(eq(listings.id, input.listingId), eq(listings.sellerProfileId, input.sellerProfileId)));
+  await db.delete(listingImages).where(eq(listingImages.listingId, input.listingId));
+  if (input.imageUrls?.length) await db.insert(listingImages).values(input.imageUrls.map((imageUrl, sortOrder) => ({ listingId: input.listingId, imageUrl, sortOrder })));
+}
+
+export async function archiveSellerListing(sellerProfileId: number, listingId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Marketplace service is unavailable.");
+  await db.update(listings).set({ status: "archived", updatedAt: new Date() }).where(and(eq(listings.id, listingId), eq(listings.sellerProfileId, sellerProfileId)));
+}
+
+export async function createWishlistChangeNotifications(input: {
+  listingId: number;
+  listingTitle: string;
+  previousPriceCents: number | null;
+  nextPriceCents: number | null;
+  previousStatus: "draft" | "published" | "archived";
+  nextStatus: "draft" | "published" | "archived";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Marketplace service is unavailable.");
+  const savedBy = await db.select({ userId: wishlists.userId }).from(wishlists).where(eq(wishlists.listingId, input.listingId));
+  if (!savedBy.length) return;
+  const rows: Array<typeof buyerNotifications.$inferInsert> = [];
+  if (input.previousPriceCents !== null && input.nextPriceCents !== null && input.nextPriceCents < input.previousPriceCents) {
+    rows.push(...savedBy.map(({ userId }) => ({ userId, listingId: input.listingId, type: "price_drop" as const, title: "A saved listing just dropped in price", message: `${input.listingTitle} is now available at a lower price.` })));
+  }
+  if (input.previousStatus !== input.nextStatus) {
+    const statusLabel = input.nextStatus === "archived" ? "is no longer available" : input.nextStatus === "published" ? "is now available" : "is currently paused";
+    rows.push(...savedBy.map(({ userId }) => ({ userId, listingId: input.listingId, type: "status_change" as const, title: "A saved listing has changed", message: `${input.listingTitle} ${statusLabel}.` })));
+  }
+  if (rows.length) await db.insert(buyerNotifications).values(rows);
+}
+
 export async function createListingEnquiry(input: { listingId: number; buyerUserId: number; message: string }) {
   const db = await getDb();
   if (!db) throw new Error("Marketplace service is unavailable.");
@@ -190,4 +264,20 @@ export async function removeWishlistItem(userId: number, listingId: number) {
   const db = await getDb();
   if (!db) throw new Error("Marketplace service is unavailable.");
   await db.delete(wishlists).where(and(eq(wishlists.userId, userId), eq(wishlists.listingId, listingId)));
+}
+
+export async function getBuyerNotifications(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ notification: buyerNotifications, listing: listings }).from(buyerNotifications)
+    .innerJoin(listings, eq(buyerNotifications.listingId, listings.id))
+    .where(eq(buyerNotifications.userId, userId))
+    .orderBy(desc(buyerNotifications.createdAt))
+    .limit(30);
+}
+
+export async function markBuyerNotificationsRead(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Marketplace service is unavailable.");
+  await db.update(buyerNotifications).set({ readAt: new Date() }).where(eq(buyerNotifications.userId, userId));
 }

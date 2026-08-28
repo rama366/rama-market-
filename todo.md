@@ -24,3 +24,9 @@
 - [x] Verify seller photo upload renders selected images in the listing form and listing gallery.
 - [x] Add deterministic component-level coverage for nearby marker projection and uploaded listing gallery payloads without seeding marketplace records.
 - [x] Add a resilient nearby-map fallback when the managed map provider cannot load in a visitor environment.
+- [x] Add seller profile editing for marketplace location, business presentation, and contact details.
+- [x] Add seller-only edit and delete controls for active marketplace listings.
+- [x] Add buyer notifications for wishlist listing price reductions and status changes.
+- [x] Add regression coverage and responsive validation for seller management and wishlist alerts.
+- [x] Validate mobile layouts for seller profile editing, listing management controls, and buyer saved-listing alerts.
+- [x] Verify the seller profile editor, listing editor, and buyer alerts states through focused implementation checks.

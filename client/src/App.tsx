@@ -4,6 +4,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Account from "./pages/Account";
+import Alerts from "./pages/Alerts";
 import Home from "./pages/Home";
 import ListingDetail from "./pages/ListingDetail";
 import Listings from "./pages/Listings";
@@ -17,6 +18,7 @@ function Router() {
     <Route path="/listings/:id" component={ListingDetail} />
     <Route path="/onboarding" component={Onboarding} />
     <Route path="/account" component={Account} />
+    <Route path="/alerts" component={Alerts} />
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;
@@ -25,4 +27,3 @@ function Router() {
 export default function App() {
   return <ErrorBoundary><ThemeProvider defaultTheme="light"><TooltipProvider><Toaster richColors position="top-center" /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>;
 }
-

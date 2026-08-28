@@ -38,7 +38,7 @@ export const listings = mysqlTable("listings", {
   currency: varchar("currency", { length: 3 }).default("USD").notNull(),
   location: varchar("location", { length: 160 }),
   imageUrl: text("imageUrl"),
-  status: mysqlEnum("status", ["draft", "published"]).default("published").notNull(),
+  status: mysqlEnum("status", ["draft", "published", "archived"]).default("published").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   publishedAt: timestamp("publishedAt").defaultNow().notNull(),
@@ -74,6 +74,17 @@ export const wishlists = mysqlTable("wishlists", {
 }, (table) => [
   uniqueIndex("wishlists_user_listing_unique").on(table.userId, table.listingId),
 ]);
+
+export const buyerNotifications = mysqlTable("buyerNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  listingId: int("listingId").notNull(),
+  type: mysqlEnum("type", ["price_drop", "status_change"]).notNull(),
+  title: varchar("title", { length: 180 }).notNull(),
+  message: text("message").notNull(),
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;

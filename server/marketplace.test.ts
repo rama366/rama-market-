@@ -3,16 +3,23 @@ import { getFallbackMarkerPosition } from "../client/src/lib/nearby";
 
 vi.mock("./db", () => ({
   addWishlistItem: vi.fn(),
+  archiveSellerListing: vi.fn(),
   createListing: vi.fn(),
   createListingEnquiry: vi.fn(),
+  createWishlistChangeNotifications: vi.fn(),
+  getBuyerNotifications: vi.fn(),
   getMarketplaceProfile: vi.fn(),
   getPublishedListing: vi.fn(),
+  getSellerListing: vi.fn(),
+  getSellerListings: vi.fn(),
   getUserByOpenId: vi.fn(),
   getWishlistItems: vi.fn(),
+  markBuyerNotificationsRead: vi.fn(),
   registerPremiumInterest: vi.fn(),
   removeWishlistItem: vi.fn(),
   searchNearbyListings: vi.fn(),
   searchPublishedListings: vi.fn(),
+  updateSellerListing: vi.fn(),
   upsertMarketplaceProfile: vi.fn(),
   upsertUser: vi.fn(),
 }));
@@ -126,5 +133,35 @@ describe("marketplace procedures", () => {
   it("keeps fallback nearby-map seller marker positions within visible boundaries", () => {
     expect(getFallbackMarkerPosition({ lat: 40.7128, lng: -74.006 }, 40_712_800, -74_006_000)).toEqual({ left: "50%", top: "50%" });
     expect(getFallbackMarkerPosition({ lat: 40.7128, lng: -74.006 }, 50_000_000, -90_000_000)).toEqual({ left: "8%", top: "10%" });
+  });
+
+  it("lets a seller update an owned listing and notifies buyers of a price reduction", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "seller" } as never);
+    vi.mocked(db.getSellerListing).mockResolvedValue({ listing: { id: 55, title: "Field jacket", priceCents: 40000, status: "published" } } as never);
+    const caller = appRouter.createCaller(context());
+
+    await expect(caller.marketplace.updateListing({ listingId: 55, title: "Field jacket", description: "A durable field jacket with a quilted lining and a clean, relaxed everyday fit for cooler weather.", category: "clothing", priceCents: 30000, currency: "USD", status: "published" })).resolves.toEqual({ success: true });
+    expect(db.updateSellerListing).toHaveBeenCalledWith(expect.objectContaining({ listingId: 55, sellerProfileId: 9, priceCents: 30000 }));
+    expect(db.createWishlistChangeNotifications).toHaveBeenCalledWith(expect.objectContaining({ listingId: 55, previousPriceCents: 40000, nextPriceCents: 30000 }));
+  });
+
+  it("archives an owned listing and creates an availability-change alert", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "seller" } as never);
+    vi.mocked(db.getSellerListing).mockResolvedValue({ listing: { id: 56, title: "Studio portrait session", priceCents: null, status: "published" } } as never);
+    const caller = appRouter.createCaller(context());
+
+    await expect(caller.marketplace.deleteListing({ listingId: 56 })).resolves.toEqual({ success: true });
+    expect(db.archiveSellerListing).toHaveBeenCalledWith(9, 56);
+    expect(db.createWishlistChangeNotifications).toHaveBeenCalledWith(expect.objectContaining({ listingId: 56, nextStatus: "archived" }));
+  });
+
+  it("returns buyer notifications and allows them to be marked as read", async () => {
+    vi.mocked(db.getMarketplaceProfile).mockResolvedValue({ id: 9, userId: 21, accountType: "buyer" } as never);
+    vi.mocked(db.getBuyerNotifications).mockResolvedValue([] as never);
+    const caller = appRouter.createCaller(context());
+
+    await expect(caller.marketplace.notifications()).resolves.toEqual([]);
+    await expect(caller.marketplace.markNotificationsRead()).resolves.toEqual({ success: true });
+    expect(db.markBuyerNotificationsRead).toHaveBeenCalledWith(21);
   });
 });

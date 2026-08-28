@@ -1,6 +1,6 @@
 import { startLogin } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Menu, Search, Store, X } from "lucide-react";
+import { Bell, Menu, Search, Store, X } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -30,6 +30,7 @@ export function MarketplaceHeader() {
           <button onClick={() => nav("/listings")} className="transition-colors hover:text-[#b85a3f]">Browse</button>
           <button onClick={() => nav("/listings?filter=nearby")} className="transition-colors hover:text-[#b85a3f]">Near you</button>
           <button onClick={() => nav("/account")} className="transition-colors hover:text-[#b85a3f]">My marketplace</button>
+          <button onClick={() => nav("/alerts")} className="transition-colors hover:text-[#b85a3f]">Alerts</button>
           <button onClick={() => beginJourney("seller")} className="transition-colors hover:text-[#b85a3f]">For sellers</button>
         </nav>
         <div className="hidden items-center gap-2 sm:flex">
@@ -40,6 +41,7 @@ export function MarketplaceHeader() {
         {open && <div className="absolute left-5 right-5 top-[72px] rounded-[1.5rem] border border-[#193d2b]/10 bg-[#fcfbf7] p-3 shadow-xl sm:hidden">
           <button onClick={() => nav("/listings")} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold hover:bg-[#edf0e7]"><Search className="size-4" /> Browse listings</button>
           <button onClick={() => nav("/account")} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold hover:bg-[#edf0e7]"><Store className="size-4" /> My marketplace</button>
+          <button onClick={() => nav("/alerts")} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold hover:bg-[#edf0e7]"><Bell className="size-4" /> Saved listing alerts</button>
           <button onClick={() => beginJourney("seller")} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold hover:bg-[#edf0e7]"><Store className="size-4" /> Start selling</button>
         </div>}
       </header>
