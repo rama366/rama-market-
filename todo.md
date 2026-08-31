@@ -30,3 +30,9 @@
 - [x] Add regression coverage and responsive validation for seller management and wishlist alerts.
 - [x] Validate mobile layouts for seller profile editing, listing management controls, and buyer saved-listing alerts.
 - [x] Verify the seller profile editor, listing editor, and buyer alerts states through focused implementation checks.
+
+- [ ] Create and validate a reusable Crafted Men marketplace skill with skill-creator.
+- [ ] Add social sharing buttons to product listing pages.
+- [ ] Add suggested prompt chips to the AI shopping assistant.
+- [ ] Add price sorting and filtering controls to the buyer wishlist page.
+- [ ] Add regression coverage, visual validation, and a final checkpoint for this feature batch.
