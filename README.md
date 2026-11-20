@@ -1,39 +1,51 @@
 # Crafted Men
 
-Crafted Men is a full-stack marketplace for discovering products and services, connecting registered buyers with registered sellers, and getting help from an AI shopping guide. The experience is designed around thoughtful discovery: broad search, category browsing, nearby seller discovery, wishlists, seller tools, and a premium-interest path called Crafted+.
+A classic-meets-modern marketplace for **clothes, cars and nearby shops**, built for Tanzania and priced in TZS by default (USD optional).
 
-## What is included
+Buyers can search, filter, save favourites and message sellers on WhatsApp. Sellers get a studio to publish listings and a shop profile. Shop owners appear in a directory with a map, opening hours, reviews and distance sorting. Admins can approve or remove listings and shops.
 
-- Public marketplace home page and universal listing search.
-- Categories for clothing, cars, homes, electronics, and services.
-- Buyer and seller onboarding backed by Manus OAuth.
-- Seller profiles with editable business details, city, phone, bio, and geocoded coordinates.
-- Seller listing creation, editing, archiving, publishing, and multi-photo uploads.
-- Buyer wishlists with price-drop and availability notifications.
-- Nearby discovery with browser geolocation, distance filters, and map view.
-- AI-powered Crafted Men Guide with marketplace help and suggested prompt chips.
-- Enquiry flow for buyers to contact sellers without exposing payment details.
-- Crafted+ interest registration and premium seller membership fields for future ranking/badge experiences. Stripe checkout is intentionally not enabled in the current build.
-- Vitest coverage for core marketplace, authentication, branding, and utility behavior.
+---
 
-## Technology stack
+## What's inside
 
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS 4, Wouter, Radix UI, Lucide icons.
-- **Backend:** Node.js, Express 4, tRPC 11, Zod.
-- **Data:** MySQL/TiDB through Drizzle ORM and SQL migrations.
-- **Authentication:** Manus OAuth and server-side session cookies.
-- **Storage:** Project storage/S3-compatible storage for listing images.
-- **AI and integrations:** Manus built-in LLM, map/geocoding proxy, and storage services.
-- **Testing:** Vitest and TypeScript strict checking.
+**Design**
+- Serif headings (Playfair Display) over Inter body text, in a deep navy / cream / gold palette.
+- Sticky glass header, light/dark toggle that is remembered, animated page loader.
+- Scroll reveals, hero parallax, counting stats, card lift + image zoom on hover, quick view.
+- Mobile-first responsive layout, and all motion respects `prefers-reduced-motion`.
 
-## Requirements
+**Buying**
+- Search, category / price / location / condition filters, and sorting.
+- Listing pages with photo lightbox, seller details, ratings and a report button.
+- Wishlist (favourites), saved-listing alerts for price drops and availability.
+- "Chat on WhatsApp" with a pre-filled message, plus a call button.
 
-- Node.js 20 or newer.
-- pnpm 10 or newer.
-- A MySQL or TiDB database for production-like development.
-- Manus project environment variables for OAuth, database, storage, maps, and built-in AI services.
+**Selling**
+- Buyer/seller onboarding, seller profile editing, shop creation with opening hours.
+- Add, edit, delete, mark-as-sold and multi-photo listings.
+- Category-aware fields: cars get make/model/year/mileage/transmission, clothes get size/colour/gender.
 
-The hosted Manus WebDev environment supplies the required service credentials automatically. For a standalone deployment, configure equivalent values securely through the deployment platform rather than committing them to the repository.
+**Shops & trust**
+- Shop directory, shop profile pages and a Leaflet + OpenStreetMap map view.
+- "Shops near me" using browser geolocation, sorted by distance.
+- Seller ratings and reviews, verified-seller badge, report-listing flow.
+- Admin console at `/admin` to approve or remove listings and shops.
+
+---
+
+## Tech stack
+
+| Layer | Choice |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, Wouter |
+| Backend | Node.js, Express 4, tRPC 11, Zod |
+| Database | MySQL (or TiDB) through Drizzle ORM |
+| Auth | Manus OAuth with server-side session cookies |
+| Storage | Project storage through the S3-compatible upload helper |
+| Maps | Leaflet + OpenStreetMap (no API key needed) |
+| Tests | Vitest, `tsc --noEmit` |
+
+---
 
 ## Quick start
 
@@ -44,162 +56,201 @@ pnpm install
 pnpm run dev
 ```
 
-Open the local preview at `http://localhost:3000` unless the development server reports a different port.
+Open `http://localhost:3000`.
 
-## Environment configuration
+```bash
+pnpm run check     # TypeScript
+pnpm test          # Vitest
+pnpm run build     # client bundle + bundled server
+pnpm start         # run the production build
+```
 
-Do not commit `.env` files or real credentials. The application reads server-side values through `server/_core/env.ts`. The main variables used by the template are:
+---
+
+## Environment variables
+
+Create a `.env` file locally. **Never commit it** — `.gitignore` already excludes `.env*`.
 
 | Variable | Purpose |
 | --- | --- |
-| `DATABASE_URL` | MySQL/TiDB connection string. |
-| `JWT_SECRET` | Secret used to sign session cookies. Use a long random value. |
-| `VITE_APP_ID` | Manus OAuth application ID. |
-| `OAUTH_SERVER_URL` | Manus OAuth backend URL. |
-| `VITE_OAUTH_PORTAL_URL` | Browser-facing Manus login portal. |
-| `OWNER_OPEN_ID` | Open ID of the project owner/admin. |
-| `OWNER_NAME` | Display name of the project owner. |
-| `BUILT_IN_FORGE_API_URL` | Server-side Manus built-in API endpoint. |
-| `BUILT_IN_FORGE_API_KEY` | Server-only credential for built-in services. Never expose it to the browser. |
-| `VITE_FRONTEND_FORGE_API_URL` | Browser-safe built-in API endpoint when required by the client. |
-| `VITE_FRONTEND_FORGE_API_KEY` | Browser-scoped credential, only when explicitly required by a frontend integration. |
+| `DATABASE_URL` | MySQL/TiDB connection string, e.g. `mysql://user:pass@host:3306/db` |
+| `JWT_SECRET` | Long random string used to sign session cookies |
+| `VITE_APP_ID` | OAuth application ID |
+| `OAUTH_SERVER_URL` | OAuth backend URL |
+| `VITE_OAUTH_PORTAL_URL` | Browser-facing login portal URL |
+| `OWNER_OPEN_ID` | Open ID of the project owner (gets admin access) |
+| `OWNER_NAME` | Owner display name |
+| `BUILT_IN_FORGE_API_URL` | Server-side built-in API endpoint |
+| `BUILT_IN_FORGE_API_KEY` | Server-only credential — never expose to the browser |
+| `VITE_FRONTEND_FORGE_API_URL` | Browser-safe API endpoint, only if needed |
+| `VITE_FRONTEND_FORGE_API_KEY` | Browser-scoped key, only if explicitly required |
 
-The server should fail closed when required secrets are missing. Use the platform secret manager or deployment environment settings to provide them.
+Without OAuth configured the app still runs locally and public pages work; sign-in is disabled.
 
-## Database setup
+---
 
-The schema is defined in `drizzle/schema.ts`, with generated migrations in `drizzle/`. Use the project database workflow to keep the schema and database synchronized:
+## Database
+
+The schema lives in `drizzle/schema.ts`. Migrations are numbered SQL files in `drizzle/`.
+The marketplace upgrade (shops, reviews, reports, listing attributes, coordinates, sold state) is
+`drizzle/0005_marketplace_upgrade.sql`.
 
 ```bash
+pnpm run db:push        # generate + apply migrations
+# or separately
 pnpm drizzle-kit generate
 pnpm drizzle-kit migrate
 ```
 
-The convenience script is:
+Categories are stored as a plain text key (not a database enum), so **adding a category never needs a migration**.
 
-```bash
-pnpm run db:push
+Tables: `users`, `marketplaceProfiles`, `listings`, `listingImages`, `wishlists`,
+`listingEnquiries`, `buyerNotifications`, `premiumInterest`, `shops`, `reviews`, `listingReports`.
+
+---
+
+## How to add a category
+
+Everything reads from one file: `client/src/lib/categories.ts`.
+
+```ts
+export const CATEGORIES: CategoryDefinition[] = [
+  // …
+  {
+    key: "furniture",                      // stored in the database; keep it stable
+    label: "Furniture",
+    plural: "Furniture & home",
+    tagline: "Pieces with a past, ready for a second home.",
+    intro: "Desks, chairs and storage from sellers near you.",
+    tone: "bg-amber-50 dark:bg-amber-950/30",   // soft tinted surface
+    icon: "home",                          // "shirt" | "car" | "home" | "laptop" | "wrench"
+    featured: true,                        // shows on the homepage grid
+    fields: [
+      { key: "material", label: "Material", type: "text", placeholder: "Teak" },
+      { key: "dimensions", label: "Dimensions", type: "text", placeholder: "120 × 60 cm", optional: true },
+    ],
+  },
+];
 ```
 
-Run migrations only against the intended database. Never use production credentials during local experiments, and do not insert sample or test data into a shared production database.
+Then add the icon to `ICONS` in `client/src/lib/categories.ts` if you used a new icon name (the
+union type already covers the five built-in options). Save and reload — the homepage grid, filters,
+listing form and search all pick it up automatically.
 
-## Development commands
+---
 
-| Command | Description |
-| --- | --- |
-| `pnpm run dev` | Start the Vite/Express development server with watch mode. |
-| `pnpm run check` | Run TypeScript without emitting files. |
-| `pnpm test` | Run the Vitest test suite once. |
-| `pnpm run build` | Build the browser bundle and bundled production server. |
-| `pnpm start` | Start the bundled production server from `dist/`. |
-| `pnpm run format` | Format project files with Prettier. |
-| `pnpm run db:push` | Generate and apply Drizzle migrations. |
-| `pnpm audit --prod` | Audit production dependencies against the current advisory database. |
+## How to add a listing
 
-A recommended pre-commit check is:
+**Through the UI (recommended)**
+1. Sign in and choose *I'm here to sell* on `/onboarding`.
+2. Open `/sell` and press **Create listing**.
+3. Fill in title, price (TZS, optional USD), category, condition, description, location.
+4. Add the category fields that appear (e.g. make/model/year for cars).
+5. Upload up to six photos and publish.
 
-```bash
-pnpm run check && pnpm test && pnpm run build
+**Directly in the database** (for seed data only):
+
+```sql
+INSERT INTO listings
+  (sellerProfileId, title, description, priceCents, currency, category, condition, location, status, createdAt)
+VALUES
+  (1, 'Toyota Harrier 2018', 'One owner, full service history.', 8500000000, 'TZS',
+   'cars', 'Like new', 'Dar es Salaam', 'active', NOW());
 ```
+
+`priceCents` is an integer in the currency's minor units. For TZS, `85,000,000` is `8500000000`.
+
+Edit and delete your own listings from `/sell`. Sellers can only ever modify their own rows —
+ownership is checked server-side in `server/routers.ts`.
+
+---
 
 ## Project structure
 
 ```text
 client/
-  index.html                 Browser entry point and metadata.
+  index.html                  Metadata, OG tags, theme pre-paint script
+  public/                     robots.txt, sitemap.xml, images
   src/
-    App.tsx                  Routes and application providers.
-    components/              Shared marketplace, dashboard, map, upload, and UI components.
-    pages/                   Home, listing, onboarding, account, and alert pages.
-    lib/                     tRPC client, marketplace helpers, and nearby-map utilities.
-    index.css                Global design tokens and Tailwind styles.
-
-drizzle/
-  schema.ts                  Database tables and inferred types.
-  *.sql                      Generated database migrations.
-
+    App.tsx                   Routes
+    components/               Header, footer, cards, map, editors, assistant
+    hooks/                    useMotion (reveal/parallax/count-up), usePageMeta
+    lib/categories.ts         Single source of truth for categories
+    pages/                    Home, Listings, ListingDetail, Shops, ShopProfile,
+                              Sell, Account, Alerts, Onboarding, Report, Admin
+    index.css                 Design tokens, dark mode, animation utilities
+drizzle/                      Schema + numbered migrations
 server/
-  db.ts                      Database queries and marketplace persistence helpers.
-  routers.ts                 tRPC procedures and validation contracts.
-  storage.ts                 Project storage upload helper.
-  _core/                     Manus OAuth, LLM, map, server, and runtime plumbing.
-
-shared/                      Shared constants and error definitions.
-patches/                     Package patches used by pnpm.
-vitest.config.ts             Test configuration.
-vite.config.ts              Frontend and development-server configuration.
+  db.ts                       Query layer
+  routers.ts                  tRPC procedures and validation
+  storage.ts                  Upload helper
+scripts/verify.mjs            Playwright screenshot check
 ```
 
-Framework files under `server/_core/` are platform plumbing. Extend them only when the feature genuinely belongs to the runtime layer; marketplace behavior generally belongs in `server/db.ts`, `server/routers.ts`, and `client/src/`.
-
-## Marketplace usage
-
-### Buyers
-
-1. Open the directory and search by product, service, category, or location.
-2. Use **Use my location** to discover sellers within a chosen radius. Location is used for the query and is not stored by the marketplace UI.
-3. Open a listing to review photos, description, seller details, and location.
-4. Sign in and complete a buyer profile to save listings to a wishlist.
-5. Use the account page to organize saved listings by recency, price, or Crafted+ seller status.
-6. Send an enquiry directly from a listing page. Crafted Men introduces the buyer and seller; arrangements are completed directly between them.
-
-### Sellers
-
-1. Sign in and choose the seller journey during onboarding.
-2. Add a public name, business name, city, phone number, and shop bio.
-3. Create a listing with a title, detailed description, category, optional price, location, and up to six images.
-4. Review and update listings from the seller studio.
-5. Archive listings when they are no longer available. Buyers with the listing on their wishlist can receive status-change notifications.
-6. Use the Crafted+ interest path to register interest in future premium seller benefits. Payment information is not collected by the current implementation.
-
-### AI guide
-
-The Crafted Men Guide is available from the floating assistant button. Prompt chips provide quick starting points such as finding a category, learning how to sell, or understanding Crafted+. AI responses are informational and must not invent availability, pricing, seller contact details, or payment capabilities.
-
-## Authentication and authorization
-
-- Public browsing uses `publicProcedure`.
-- Profile, wishlist, enquiries, seller management, notifications, and premium-interest procedures use `protectedProcedure`.
-- Seller-only operations verify the authenticated marketplace profile is a seller profile.
-- Buyer-only operations verify the authenticated marketplace profile is a buyer profile.
-- Admin authorization should use the user role from the authenticated session rather than client-provided role fields.
-- The browser must not manually manage session cookies. Use the provided Manus auth hooks and OAuth flow.
-
-## Storage and uploads
-
-Listing image bytes are uploaded through the server and stored in project storage. The database stores storage URLs and listing metadata, not image blobs. Uploaded image URLs are validated to use the protected `/manus-storage/` path. Keep large media out of `client/public/` and `client/src/assets/`.
+---
 
 ## Deployment
 
-1. Install dependencies with `pnpm install --frozen-lockfile`.
-2. Configure production environment variables through the hosting platform's secret manager.
-3. Apply database migrations against the production database.
-4. Run `pnpm run check`, `pnpm test`, and `pnpm run build`.
-5. Start the server with `pnpm start` or use the platform's managed WebDev deployment flow.
-6. Verify OAuth callback URLs, cookie settings, storage uploads, LLM calls, map discovery, and listing enquiries in the deployed environment.
-7. Create a project checkpoint before publishing through Manus WebDev.
+This app needs a **Node server and a MySQL database**, so **GitHub Pages will not work**
+(it only serves static files). Use **Vercel** — the closest fit — or any Node host with MySQL.
 
-For the managed deployment, the current public domain is maintained by the WebDev project configuration. Custom domains and OAuth callback origins must be configured in the hosting and Manus OAuth settings together.
+**Vercel**
+1. Import the GitHub repository.
+2. Build command `pnpm run build`, output is served by `pnpm start`.
+3. Add every environment variable above in the project settings.
+4. Point `DATABASE_URL` at a hosted MySQL database (PlanetScale, Railway, Aiven or similar).
+5. Apply migrations once against that database: `pnpm drizzle-kit migrate`.
+6. Set the OAuth callback URL and cookie secret for the production domain.
 
-## Security checklist
+**Alternatives:** Render or Railway (long-running Node + managed MySQL), or a VPS with PM2 and Nginx.
 
-- Keep all `.env*` files, API keys, database URLs, JWT secrets, and OAuth secrets out of Git.
-- Use HTTPS in production and secure, HTTP-only session cookies.
-- Validate all tRPC inputs with Zod and enforce authorization on the server.
-- Keep uploaded files in project storage and validate MIME types, size limits, and storage URL prefixes.
-- Do not trust browser-provided seller IDs, buyer IDs, roles, prices, status values, or ownership claims.
-- Review `pnpm audit --prod` before releases and update transitive dependencies when patches are available.
-- Treat AI output as untrusted text; do not use it as an authorization or pricing source.
-- Review map, storage, OAuth, and built-in API logs for unexpected access or credential errors.
+Neither GitHub Pages nor a static Netlify site can run the tRPC server, so treat them as unsupported.
+
+---
+
+## Publishing these changes to GitHub
+
+The redesign was committed in seven steps on top of this repository's existing
+history. If your local copy still needs to be pushed:
+
+```bash
+cd path/to/project
+git log --oneline -8          # confirm the new commits are present
+git push origin main
+```
+
+If the folder you downloaded does not include the `.git` directory, create a
+fresh history and push once:
+
+```bash
+git init -b main
+git add -A
+git commit -m "feat: marketplace redesign with shops, seller studio and admin"
+git remote add origin https://github.com/rama366/rama-market-.git
+git push -u origin main --force-with-lease
+```
+
+Pushing with `--force-with-lease` replaces the remote branch, so only use it
+after confirming the local tree is the one you want to keep.
+
+## Security notes
+
+- `pnpm audit --prod` before releases.
+- All inputs are validated with Zod; ownership and role checks happen on the server.
+- Image URLs are restricted to the project storage path; uploads are size- and type-checked.
+- The admin role is read from the session, never from the client.
+- AI output is treated as untrusted text, never as authorisation or pricing data.
+
+---
 
 ## Known limitations
 
-- Crafted+ is currently an interest-only path; Stripe checkout is not configured.
-- Listing search currently uses the marketplace database and does not crawl the entire web.
-- Nearby discovery depends on browser permission and successful seller-city geocoding.
-- Some advisory findings may come from transitive packages that require upstream releases or carefully tested package overrides.
-- Production secrets and OAuth callback configuration are environment-specific and are not included in this repository.
+- Crafted+ is an interest list only; no payment is taken.
+- Search covers the marketplace database, not the open web.
+- "Shops near me" needs browser permission and shop coordinates.
+- Two tests (`server/title.secret.test.ts`, `server/resend.secret.test.ts`) require environment
+  secrets and fail on a bare checkout. That is expected; the rest of the suite passes.
 
 ## License
 
-This project is currently marked `MIT` in `package.json`. Confirm the intended ownership and licensing terms before distributing the application or accepting external contributions.
+MIT, as declared in `package.json`. Confirm ownership terms before distributing.
